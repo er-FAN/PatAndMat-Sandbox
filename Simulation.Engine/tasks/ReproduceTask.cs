@@ -12,12 +12,20 @@ namespace Simulation.Engine.tasks
         //Form1 form=new Form1();
         public string Name => "تولیدمثل";
         public bool IsCompleted { get; private set; } = false;
-        private List<LivingBeing> entities;
 
-        public ReproduceTask(List<LivingBeing> entities)
+        private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+
+        public ITask? WaitFor
         {
-            this.entities = entities;
+            get => _waitFor;
+            set
+            {
+                _waitFor = value;
+                IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+            }
         }
+
+        public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
         public void ExecuteStep(LivingBeing being, World world)
         {

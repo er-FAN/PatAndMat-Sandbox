@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -102,16 +103,17 @@ namespace Simulation.Engine.models
 
 
 
-    public class World
+    public class World : PhysicalObject
     {
         public string Name { get; set; } = string.Empty;
-        public int Width { get; set; }
-        public int Height { get; set; }
         public int FoodSupply { get; set; }
         public int WaterSupply { get; set; }
         public List<LivingBeing> Entities { get; set; } = [];
         public List<LivingBeing> DiedEntities { get; set; } = [];
         public List<LivingBeing> NewEntities { get; set; } = [];
+        public List<Location> FilledLocations { get; set; } = [];
+        public List<Location> EmptyLocations { get; set; } = [];
+        public List<EdibleObject> EdibleObjects { get; set; } = [];
 
         public EventManager EventManager { get; set; } = new EventManager();
 
@@ -125,9 +127,59 @@ namespace Simulation.Engine.models
             FoodSupply = initialFood;
             WaterSupply = initialWater;
 
+            FoodDistribution(100, 5, 50);
+
             EventManager.RegisterEvent("SeasonChange", OnSeasonChange);
             EventManager.RegisterEvent("Earthquake", OnEarthquake);
         }
+
+        public void FoodDistribution(int count, int minEnergy, int maxEnergy)
+        {
+            if (count <= 0)
+                throw new ArgumentException("Count must be greater than zero.", nameof(count));
+
+            if (minEnergy <= 0 || maxEnergy <= 0 || minEnergy > maxEnergy)
+                throw new ArgumentException("Energy range is invalid.");
+
+            Random random = new Random();
+
+            for (int i = 0; i < count; i++)
+            {
+                // ایجاد مکان رندوم برای خوراکی
+                int x = random.Next(0, Width);
+                int y = random.Next(0, Height);
+                var location = new Location(x, y);
+
+                // بررسی اینکه مکان خالی است
+                bool isOccupied = Entities.Any(entity =>
+                {
+                    var entityBounds = new Rectangle(entity.Location.X, entity.Location.Y, entity.Width, entity.Height);
+                    var foodBounds = new Rectangle(location.X, location.Y, 1, 1); // فرض کنیم هر خوراکی اندازه 1x1 دارد
+                    return entityBounds.IntersectsWith(foodBounds);
+                });
+
+                if (isOccupied)
+                {
+                    i--; // اگر مکان اشغال شده، دوباره امتحان می‌کنیم
+                    continue;
+                }
+
+                // ایجاد خوراکی با مقدار انرژی رندوم
+                int energy = random.Next(minEnergy, maxEnergy + 1);
+
+                var food = new EdibleObject
+                {
+                    Height = 1,
+                    Width = 1,
+                    Location = location,
+                    Energy = energy
+                };
+
+                // اضافه کردن خوراکی به موجودیت‌های جهان
+                EdibleObjects.Add(food);
+            }
+        }
+
 
         public void AddEntity(LivingBeing entity)
         {
@@ -137,7 +189,6 @@ namespace Simulation.Engine.models
             }
 
             Entities.Add(entity);
-            EventManager.SimulationEntities.Add(entity);
         }
 
         public async Task UpdateAsync()

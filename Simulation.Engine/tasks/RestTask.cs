@@ -13,14 +13,30 @@ namespace Simulation.Engine.tasks
         //Form1 form = new Form1();
         public string Name => "استراحت";
         public bool IsCompleted { get; private set; } = false;
+        private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+
+        public ITask? WaitFor
+        {
+            get => _waitFor;
+            set
+            {
+                _waitFor = value;
+                IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+            }
+        }
+
+        public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
+
         int steps = 0;
         public void ExecuteStep(LivingBeing being, World world)
         {
             //form.WriteLine($"💤 {being.Name} در حال استراحت است.");
+            steps++;
             being.Sleep -= 4;
             if (being.Sleep <= 0)
             {
                 IsCompleted = true;
+                steps = 0;
             }
         }
 

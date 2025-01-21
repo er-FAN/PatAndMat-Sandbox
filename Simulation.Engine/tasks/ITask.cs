@@ -11,6 +11,8 @@ namespace Simulation.Engine.tasks
     {
         string Name { get; }
         bool IsCompleted { get; }
+        public ITask? WaitFor { get; set; }
+        bool IsWaited { get; }
         void ExecuteStep(LivingBeing being, World world);
         void ForceStop();
     }

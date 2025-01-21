@@ -9,7 +9,7 @@ namespace Simulation.Engine.models
     public class EventManager
     {
         private Dictionary<string, Action> events = new Dictionary<string, Action>();
-        public List<LivingBeing> SimulationEntities { get; set; } = new List<LivingBeing>();
+        //public List<LivingBeing> SimulationEntities { get; set; } = new List<LivingBeing>();
         public void RegisterEvent(string eventName, Action action)
         {
             if (!events.ContainsKey(eventName))

@@ -12,7 +12,20 @@ namespace Simulation.Engine.tasks
         public string Name => "حرکت";
         //Form1 form=new Form1();
         public bool IsCompleted { get; private set; } = false;
-        private Location Destination;
+        public Location Destination;
+        private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+
+        public ITask? WaitFor
+        {
+            get => _waitFor;
+            set
+            {
+                _waitFor = value;
+                IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+            }
+        }
+
+        public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
         public MoveTask(Location destination)
         {

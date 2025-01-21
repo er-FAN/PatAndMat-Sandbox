@@ -7,13 +7,11 @@ using System.Threading.Tasks;
 
 namespace Simulation.Engine.tasks
 {
-
-    public class EatTask : ITask
+    public class Die : ITask
     {
-        //Form1 form = new Form1();
-        public string Name => "خوردن غذا";
+        public string Name => "مردن";
+
         public bool IsCompleted { get; private set; } = false;
-        private int steps = 0;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
 
         public ITask? WaitFor
@@ -28,32 +26,15 @@ namespace Simulation.Engine.tasks
 
         public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
+
         public void ExecuteStep(LivingBeing being, World world)
         {
-
-            //form.WriteLine($"🍽️ {being.Name} در حال خوردن غذا (مرحله {steps}).");
-
-            if (world.FoodSupply > 0)
-            {
-                steps++;
-                being.Energy += 5;
-                world.FoodSupply -= 5;
-            }
-            else
-            {
-                steps = 3;
-            }
-
-
-            if (steps >= 3)
-            {
-                IsCompleted = true;
-            }
+            being.IsAlive = false;
+            world.DiedEntities.Add(being);
+            world.Entities.Remove(being);
+            IsCompleted = true;
         }
 
-        public void ForceStop()
-        {
-            throw new NotImplementedException();
-        }
+        public void ForceStop() { }
     }
 }

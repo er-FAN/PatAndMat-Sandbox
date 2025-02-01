@@ -25,11 +25,13 @@ namespace Simulation.Engine.tasks
         }
 
         public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
-
+        public ITask? Waited { get; set; }
 
         public List<PhysicalObject> objects = [];
         public List<PhysicalObject> foundObjects = [];
         MoveTask moveTask;
+
+        public event Action<ITask>? OnCompleted;
 
         public SearchTask(PhysicalObject searchFor)
         {
@@ -48,6 +50,7 @@ namespace Simulation.Engine.tasks
             {
                 MoveToFoundedObjectLocation(being);
                 IsCompleted = true; // اگر اشیائی پیدا شدند، تسک کامل می‌شود
+                OnCompleted?.Invoke(this);
                 return;
             }
 
@@ -57,14 +60,16 @@ namespace Simulation.Engine.tasks
 
         private void FilterPhysicalObjectsBySearchObjectType(World world)
         {
-            if (searchFor.Type == typeof(EdibleObject))
-            {
-                objects.AddRange(world.EdibleObjects);
-            }
-            if (searchFor.Type == typeof(LivingBeing))
-            {
-                objects.AddRange(world.Entities);
-            }
+            //if (searchFor.Type == typeof(EdibleObject))
+            //{
+            //    objects.AddRange(world.EdibleObjects);
+            //}
+            //if (searchFor.Type == typeof(LivingBeing))
+            //{SSS
+            //    objects.AddRange(world.Entities);
+            //}
+
+            objects.AddRange(world.EdibleObjects);
         }
 
         private void MoveToFoundedObjectLocation(LivingBeing being)
@@ -75,12 +80,32 @@ namespace Simulation.Engine.tasks
 
         private void MoveToRandomLocation(LivingBeing being, World world)
         {
-            int newX = Math.Clamp(being.Location.X + RandomMoveOffset(), 0, world.Width - 1);
-            int newY = Math.Clamp(being.Location.Y + RandomMoveOffset(), 0, world.Height - 1);
-            moveTask.Destination = new Location(newX, newY);
+            Location location = new(0, 0);
+
+            int newX = RandomMoveOffset();
+            int newY = RandomMoveOffset();
+            location = new Location(being.Location.X + newX, being.Location.Y + newY);
+            location = CheckIsInCorners(location, world.Width, world.Height);
+
+
+            moveTask.Destination = location;
             // اگر چیزی پیدا نشد، حرکت کنید
             being.Tasks.Add(moveTask);
+            moveTask.Waited = this;
             WaitFor = moveTask;
+        }
+
+        private Location CheckIsInCorners(Location location, int width, int height)
+        {
+            if (location.X > width || location.X < 0)
+            {
+                location.X *= -1;
+            }
+            if (location.Y > height || location.Y < 0)
+            {
+                location.Y *= -1;
+            }
+            return location;
         }
 
         private bool IsInVisualRange(LivingBeing being, PhysicalObject obj)
@@ -96,12 +121,18 @@ namespace Simulation.Engine.tasks
         private int RandomMoveOffset()
         {
             Random random = new Random();
-            return random.Next(-1, 2); // مقدار تصادفی بین -1 و 1
+            return random.Next(-25, 25); // مقدار تصادفی بین -1 و 1
         }
 
         public void ForceStop()
         {
             throw new NotImplementedException();
+        }
+
+        private void HandleWaitForCompleted(ITask completedTask)
+        {
+            Console.WriteLine($"تسک {Name} دیگر منتظر {completedTask.Name} نیست!");
+            WaitFor = null; // خالی کردن پراپرتی WaitFor      // اجرای تسک بعدی
         }
     }
 }

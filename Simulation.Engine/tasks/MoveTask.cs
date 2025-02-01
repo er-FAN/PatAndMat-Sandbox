@@ -14,6 +14,8 @@ namespace Simulation.Engine.tasks
         public bool IsCompleted { get; private set; } = false;
         public Location Destination;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+        public ITask? Waited { get; set; }
+        public event Action<ITask>? OnCompleted;
 
         public ITask? WaitFor
         {
@@ -45,6 +47,12 @@ namespace Simulation.Engine.tasks
             if (being.Location.X == Destination.X && being.Location.Y == Destination.Y)
             {
                 IsCompleted = true;
+                OnCompleted?.Invoke(this);
+                if(Waited != null)
+                {
+                    Waited.WaitFor = null;
+                }
+                
                 //form.WriteLine($"✅ {being.Name} به مقصد خود رسید.");
             }
         }

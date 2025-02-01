@@ -14,7 +14,7 @@ namespace Simulation.Engine.tasks
         public string Name => "استراحت";
         public bool IsCompleted { get; private set; } = false;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
-
+        public ITask? Waited { get; set; }
         public ITask? WaitFor
         {
             get => _waitFor;
@@ -28,6 +28,9 @@ namespace Simulation.Engine.tasks
         public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
         int steps = 0;
+
+        public event Action<ITask>? OnCompleted;
+
         public void ExecuteStep(LivingBeing being, World world)
         {
             //form.WriteLine($"💤 {being.Name} در حال استراحت است.");

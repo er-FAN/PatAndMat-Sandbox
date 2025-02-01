@@ -13,7 +13,7 @@ namespace Simulation.Engine.models
         public string Name { get; set; }
         public bool Gender { get; set; }
         public int Age { get; set; }
-        public int VisualRange { get; set; }
+        public int VisualRange { get; set; } = 50;
         public bool IsAlive { get; set; }
         public int Energy { get; set; }
         public int Sleep { get; set; }
@@ -66,10 +66,9 @@ namespace Simulation.Engine.models
                 for (int i = Tasks.Count - 1; i >= 0; i--)
                 {
                     ITask task = Tasks[i];
-                    if(!task.IsWaited)
-                    {
-                        task.ExecuteStep(this, world);
-                    }
+
+                    task.ExecuteStep(this, world);
+
                     if (task.IsCompleted)
                     {
                         //form.WriteLine($"✅ تسک '{task.Name}' برای {Name} به پایان رسید.");
@@ -83,11 +82,11 @@ namespace Simulation.Engine.models
 
         private void CheckConditions(World world)
         {
-            if (Sleep > 20) EventManager.TriggerEvent("Tired");
+            //if (Sleep > 20) EventManager.TriggerEvent("Tired");
             if (!IsSleep)
             {
                 if (Energy < 30) EventManager.TriggerEvent("Hungry");
-                if (Age > 20 && Age % 50 == 0) EventManager.TriggerEvent("Reproduce");
+                //if (Age > 20 && Age % 50 == 0) EventManager.TriggerEvent("Reproduce");
             }
             if (Age > 100 || Energy == 0)
             {

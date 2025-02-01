@@ -13,6 +13,8 @@ namespace Simulation.Engine.tasks
 
         public bool IsCompleted { get; private set; } = false;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+        public ITask? Waited { get; set; }
+        public event Action<ITask>? OnCompleted;
 
         public ITask? WaitFor
         {

@@ -16,6 +16,8 @@ namespace Simulation.Engine.tasks
         private int steps = 0;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
 
+        public event Action<ITask>? OnCompleted;
+
         public ITask? WaitFor
         {
             get => _waitFor;
@@ -25,7 +27,7 @@ namespace Simulation.Engine.tasks
                 IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
             }
         }
-
+        public ITask? Waited { get; set; }
         public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
         public void ExecuteStep(LivingBeing being, World world)

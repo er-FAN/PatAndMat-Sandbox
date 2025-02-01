@@ -127,7 +127,7 @@ namespace Simulation.Engine.models
             FoodSupply = initialFood;
             WaterSupply = initialWater;
 
-            FoodDistribution(100, 5, 50);
+            FoodDistribution(600, 5, 50);
 
             EventManager.RegisterEvent("SeasonChange", OnSeasonChange);
             EventManager.RegisterEvent("Earthquake", OnEarthquake);
@@ -169,6 +169,7 @@ namespace Simulation.Engine.models
 
                 var food = new EdibleObject
                 {
+                    Type = typeof(EdibleObject),
                     Height = 1,
                     Width = 1,
                     Location = location,

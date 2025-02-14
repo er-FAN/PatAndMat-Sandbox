@@ -24,6 +24,10 @@ namespace Simulation.Engine.tasks
             {
                 _waitFor = value;
                 IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+                if (WaitFor != null)
+                {
+                    WaitFor.OnCompleted += HandleWaitForCompleted;
+                }
             }
         }
 
@@ -48,10 +52,10 @@ namespace Simulation.Engine.tasks
             {
                 IsCompleted = true;
                 OnCompleted?.Invoke(this);
-                if(Waited != null)
-                {
-                    Waited.WaitFor = null;
-                }
+                //if(Waited != null)
+                //{
+                //    Waited.WaitFor = null;
+                //}
                 
                 //form.WriteLine($"✅ {being.Name} به مقصد خود رسید.");
             }
@@ -60,6 +64,12 @@ namespace Simulation.Engine.tasks
         public void ForceStop()
         {
             throw new NotImplementedException();
+        }
+
+        private void HandleWaitForCompleted(ITask completedTask)
+        {
+            Console.WriteLine($"تسک {Name} دیگر منتظر {completedTask.Name} نیست!");
+            WaitFor = null; // خالی کردن پراپرتی WaitFor      // اجرای تسک بعدی
         }
     }
 }

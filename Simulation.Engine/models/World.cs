@@ -114,6 +114,7 @@ namespace Simulation.Engine.models
         public List<Location> FilledLocations { get; set; } = [];
         public List<Location> EmptyLocations { get; set; } = [];
         public List<EdibleObject> EdibleObjects { get; set; } = [];
+        public List<Lake> Lakes { get; set; } = [];
 
         public EventManager EventManager { get; set; } = new EventManager();
 
@@ -127,10 +128,17 @@ namespace Simulation.Engine.models
             FoodSupply = initialFood;
             WaterSupply = initialWater;
 
-            FoodDistribution(600, 5, 50);
+            WaterDistribution();
+            FoodDistribution(500, 5, 50);
+
 
             EventManager.RegisterEvent("SeasonChange", OnSeasonChange);
             EventManager.RegisterEvent("Earthquake", OnEarthquake);
+        }
+
+        public void WaterDistribution()
+        {
+            Lakes.Add(new Lake(450, 200, 300, 250));
         }
 
         public void FoodDistribution(int count, int minEnergy, int maxEnergy)
@@ -158,7 +166,7 @@ namespace Simulation.Engine.models
                     return entityBounds.IntersectsWith(foodBounds);
                 });
 
-                if (isOccupied)
+                if (isOccupied || IsPointInsideLake(new Point(location.X, location.Y), Lakes[0]))
                 {
                     i--; // اگر مکان اشغال شده، دوباره امتحان می‌کنیم
                     continue;
@@ -180,6 +188,36 @@ namespace Simulation.Engine.models
                 EdibleObjects.Add(food);
             }
         }
+
+        public bool IsPointInsideLake(PointF point, Lake lake)
+        {
+            int intersections = 0;
+            List<PointF> points = lake.Points;
+            int count = points.Count;
+
+            for (int i = 0; i < count; i++)
+            {
+                PointF p1 = points[i];
+                PointF p2 = points[(i + 1) % count]; // نقطه بعدی (مدول برای بسته بودن چندضلعی)
+
+                // بررسی اینکه آیا خط افقی از نقطه داده شده، با ضلع چندضلعی تلاقی دارد
+                if ((point.Y > Math.Min(p1.Y, p2.Y)) &&
+                    (point.Y <= Math.Max(p1.Y, p2.Y)) &&
+                    (point.X <= Math.Max(p1.X, p2.X)))
+                {
+                    // محاسبه موقعیت تلاقی
+                    float xIntersection = p1.X + (point.Y - p1.Y) * (p2.X - p1.X) / (p2.Y - p1.Y);
+                    if (p1.Y != p2.Y && point.X < xIntersection)
+                    {
+                        intersections++;
+                    }
+                }
+            }
+
+            // اگر تعداد تلاقی‌ها فرد باشد، نقطه داخل است
+            return (intersections % 2) != 0;
+        }
+
 
 
         public void AddEntity(LivingBeing entity)

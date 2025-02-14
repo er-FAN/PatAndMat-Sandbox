@@ -13,12 +13,13 @@ namespace Simulation.Engine.models
         public string Name { get; set; }
         public bool Gender { get; set; }
         public int Age { get; set; }
-        public int VisualRange { get; set; } = 50;
+        public int VisualRange { get; set; } = 500;
         public bool IsAlive { get; set; }
         public int Energy { get; set; }
         public int Sleep { get; set; }
         public bool IsSleep { get; set; }
         public List<ITask> Tasks { get; set; } = new List<ITask>();
+        public List<EdibleObject> EdibleObjects { get; set; } = new List<EdibleObject>();
         public EventManager EventManager { get; set; } = new EventManager();
 
         public LivingBeing(string name, Location location)
@@ -88,9 +89,9 @@ namespace Simulation.Engine.models
                 if (Energy < 30) EventManager.TriggerEvent("Hungry");
                 //if (Age > 20 && Age % 50 == 0) EventManager.TriggerEvent("Reproduce");
             }
-            if (Age > 100 || Energy == 0)
+            if (Age > 10000000 || Energy == 0)
             {
-                EventManager.TriggerEvent("Die");
+                //EventManager.TriggerEvent("Die");
             }
 
         }

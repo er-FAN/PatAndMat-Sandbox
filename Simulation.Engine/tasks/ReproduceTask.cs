@@ -32,7 +32,8 @@ namespace Simulation.Engine.tasks
         public void ExecuteStep(LivingBeing being, World world)
         {
             //form.WriteLine($"🍼 {being.Name} تولیدمثل کرد!");
-            LivingBeing human = new LivingBeing("فرزند_" + being.Name, new Location(0, 0));
+            LivingBeing human = new LivingBeing("فرزند_" + being.Name, being.Location);
+            human.Tasks.Add(new MoveTask(new Location(being.Location.X + 20, being.Location.Y + 20)));
             world.Entities.Add(human);
             world.Output.NewEntities.Add(human);
             IsCompleted = true;

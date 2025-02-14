@@ -1,9 +1,4 @@
 ﻿using Simulation.Engine.models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simulation.Engine.tasks
 {
@@ -12,6 +7,7 @@ namespace Simulation.Engine.tasks
         public string Name => "جستجو";
         public PhysicalObject searchFor;
         public bool IsCompleted { get; private set; } = false;
+        public event Action<ITask>? OnCompleted;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
 
         public ITask? WaitFor
@@ -21,6 +17,11 @@ namespace Simulation.Engine.tasks
             {
                 _waitFor = value;
                 IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+                if (WaitFor != null)
+                {
+                    WaitFor.OnCompleted += HandleWaitForCompleted;
+                }
+
             }
         }
 
@@ -31,12 +32,13 @@ namespace Simulation.Engine.tasks
         public List<PhysicalObject> foundObjects = [];
         MoveTask moveTask;
 
-        public event Action<ITask>? OnCompleted;
+
 
         public SearchTask(PhysicalObject searchFor)
         {
             this.searchFor = searchFor;
             moveTask = new MoveTask(new Location(0, 0));
+
         }
 
         public void ExecuteStep(LivingBeing being, World world)
@@ -49,6 +51,12 @@ namespace Simulation.Engine.tasks
             if (foundObjects.Any())
             {
                 MoveToFoundedObjectLocation(being);
+                foreach (PhysicalObject obj in foundObjects)
+                {
+                    EdibleObject edibleObject = world.EdibleObjects.Where(x => x.Id == obj.Id).FirstOrDefault();
+                    world.EdibleObjects.Remove(edibleObject);
+                    being.EdibleObjects.Add(edibleObject);
+                }
                 IsCompleted = true; // اگر اشیائی پیدا شدند، تسک کامل می‌شود
                 OnCompleted?.Invoke(this);
                 return;
@@ -75,6 +83,8 @@ namespace Simulation.Engine.tasks
         private void MoveToFoundedObjectLocation(LivingBeing being)
         {
             moveTask.Destination = foundObjects.First().Location;
+
+
             being.Tasks.Add(moveTask);
         }
 
@@ -82,8 +92,8 @@ namespace Simulation.Engine.tasks
         {
             Location location = new(0, 0);
 
-            int newX = RandomMoveOffset();
-            int newY = RandomMoveOffset();
+            int newX = RandomMoveOffset(-25, 25);
+            int newY = RandomMoveOffset(-25, 25);
             location = new Location(being.Location.X + newX, being.Location.Y + newY);
             location = CheckIsInCorners(location, world.Width, world.Height);
 
@@ -118,10 +128,14 @@ namespace Simulation.Engine.tasks
             return deltaX <= being.VisualRange && deltaY <= being.VisualRange;
         }
 
-        private int RandomMoveOffset()
+        private int RandomMoveOffset(params int[] numbers)
         {
             Random random = new Random();
-            return random.Next(-25, 25); // مقدار تصادفی بین -1 و 1
+            if (numbers.Length == 0)
+                throw new ArgumentException("باید حداقل یک عدد وارد کنید!");
+
+            int index = random.Next(numbers.Length);  // انتخاب یک ایندکس تصادفی
+            return numbers[index];  // بازگرداندن مقدار انتخاب‌شده
         }
 
         public void ForceStop()
@@ -135,4 +149,9 @@ namespace Simulation.Engine.tasks
             WaitFor = null; // خالی کردن پراپرتی WaitFor      // اجرای تسک بعدی
         }
     }
+
+
+
+
+
 }

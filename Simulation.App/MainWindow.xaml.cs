@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Simulation.Engine.models;
 using Simulation.Engine.tasks;
 using System.Diagnostics;
+using System.Windows.Media.Imaging;
 
 namespace SimulationApp
 {
@@ -21,7 +22,7 @@ namespace SimulationApp
         private double zoomFactor = 1.0;
         private const double zoomStep = 0.1;
         private const double minZoom = 0.5;
-        private const double maxZoom = 3.0;
+        private const double maxZoom = 6.0;
 
         public MainWindow()
         {
@@ -146,49 +147,156 @@ namespace SimulationApp
         {
             SimulationCanvas.Children.Clear();
 
-            //Debug.WriteLine($"EdibleObjects Count: {world.EdibleObjects.Count}");
-            //Debug.WriteLine($"Entities Count: {world.Entities.Count}");
+            foreach (var lake in world.Lakes)
+            {
+                if (lake.Points.Count < 4) continue; // نیاز به حداقل 4 نقطه برای Catmull-Rom
+
+                PathFigure pathFigure = new PathFigure
+                {
+                    StartPoint = new System.Windows.Point(lake.Points[0].X, lake.Points[0].Y)
+                };
+
+                // استفاده از Catmull-Rom Spline برای ایجاد منحنی نرم
+                for (int i = 1; i < lake.Points.Count - 2; i++)
+                {
+                    var p0 = lake.Points[i - 1];
+                    var p1 = lake.Points[i];
+                    var p2 = lake.Points[i + 1];
+                    var p3 = lake.Points[i + 2];
+
+                    // تقسیم منحنی به بخش‌های کوچک‌تر برای همواری بیشتر
+                    for (float t = 0; t <= 1; t += 0.1f)
+                    {
+                        float x = 0.5f * (
+                            (2 * p1.X) +
+                            (-p0.X + p2.X) * t +
+                            (2 * p0.X - 5 * p1.X + 4 * p2.X - p3.X) * t * t +
+                            (-p0.X + 3 * p1.X - 3 * p2.X + p3.X) * t * t * t
+                        );
+
+                        float y = 0.5f * (
+                            (2 * p1.Y) +
+                            (-p0.Y + p2.Y) * t +
+                            (2 * p0.Y - 5 * p1.Y + 4 * p2.Y - p3.Y) * t * t +
+                            (-p0.Y + 3 * p1.Y - 3 * p2.Y + p3.Y) * t * t * t
+                        );
+
+                        pathFigure.Segments.Add(new LineSegment(new System.Windows.Point(x, y), true));
+                    }
+                }
+
+                // بستن شکل
+                pathFigure.IsClosed = true;
+
+                // ایجاد PathGeometry
+                PathGeometry pathGeometry = new PathGeometry();
+                pathGeometry.Figures.Add(pathFigure);
+
+                // رسم Path
+                Path lakeShape = new Path
+                {
+                    Data = pathGeometry,
+                    Fill = Brushes.Blue,
+                    Stroke = Brushes.DarkBlue,
+                    StrokeThickness = 2
+                };
+
+                // اضافه کردن به Canvas
+                SimulationCanvas.Children.Add(lakeShape);
+            }
 
             foreach (var obj in world.EdibleObjects)
             {
-                //Debug.WriteLine($"Drawing Edible: X={obj.Location.X}, Y={obj.Location.Y}, Width={obj.Width}, Height={obj.Height}");
-                Ellipse shape = new()
+                // ایجاد کنترل Image
+                Image image = new()
                 {
                     Width = Math.Max(obj.Width * 10, 5),
                     Height = Math.Max(obj.Height * 10, 5),
-                    Fill = Brushes.Green,
+                    Source = new BitmapImage(new Uri("C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\Images\\tree.png")),
                     Tag = obj
                 };
 
-                Canvas.SetLeft(shape, obj.Location.X);
-                Canvas.SetTop(shape, obj.Location.Y);
+                Canvas.SetLeft(image, obj.Location.X);
+                Canvas.SetTop(image, obj.Location.Y);
 
-                shape.MouseLeftButtonDown += Shape_MouseLeftButtonDown;
-                SimulationCanvas.Children.Add(shape);
+                image.MouseLeftButtonDown += Shape_MouseLeftButtonDown;
+                SimulationCanvas.Children.Add(image);
             }
 
             foreach (var obj in world.Entities)
             {
-                //Debug.WriteLine($"Drawing Entity: X={obj.Location.X}, Y={obj.Location.Y}, Width={obj.Width}, Height={obj.Height}");
-                Ellipse shape = new()
+                // ایجاد کنترل Image
+                Image image = new()
                 {
                     Width = Math.Max(obj.Width * 10, 5),
                     Height = Math.Max(obj.Height * 10, 5),
-                    Fill = Brushes.Blue,
+                    Source = new BitmapImage(new Uri("C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\Images\\smile.png")),
                     Tag = obj
                 };
 
-                Canvas.SetLeft(shape, obj.Location.X);
-                Canvas.SetTop(shape, obj.Location.Y);
+                Canvas.SetLeft(image, obj.Location.X);
+                Canvas.SetTop(image, obj.Location.Y);
 
-                shape.MouseLeftButtonDown += Shape_MouseLeftButtonDown;
-                SimulationCanvas.Children.Add(shape);
-
+                image.MouseLeftButtonDown += Shape_MouseLeftButtonDown;
+                SimulationCanvas.Children.Add(image);
 
                 DrawSearchRange(obj);
-
             }
         }
+
+
+        //private void DrawObjects()
+        //{
+        //    SimulationCanvas.Children.Clear();
+
+
+
+        //    //Debug.WriteLine($"EdibleObjects Count: {world.EdibleObjects.Count}");
+        //    //Debug.WriteLine($"Entities Count: {world.Entities.Count}");
+
+        //    foreach (var obj in world.EdibleObjects)
+        //    {
+        //        //Debug.WriteLine($"Drawing Edible: X={obj.Location.X}, Y={obj.Location.Y}, Width={obj.Width}, Height={obj.Height}");
+        //        Ellipse shape = new()
+        //        {
+        //            Width = Math.Max(obj.Width * 10, 5),
+        //            Height = Math.Max(obj.Height * 10, 5),
+        //            Fill = Brushes.Green,
+        //            Tag = obj
+        //        };
+
+        //        Canvas.SetLeft(shape, obj.Location.X);
+        //        Canvas.SetTop(shape, obj.Location.Y);
+
+        //        shape.MouseLeftButtonDown += Shape_MouseLeftButtonDown;
+        //        SimulationCanvas.Children.Add(shape);
+        //    }
+        //    if (world.Entities.Count > 1)
+        //    {
+
+        //    }
+        //    foreach (var obj in world.Entities)
+        //    {
+        //        //Debug.WriteLine($"Drawing Entity: X={obj.Location.X}, Y={obj.Location.Y}, Width={obj.Width}, Height={obj.Height}");
+        //        Ellipse shape = new()
+        //        {
+        //            Width = Math.Max(obj.Width * 10, 5),
+        //            Height = Math.Max(obj.Height * 10, 5),
+        //            Fill = Brushes.Blue,
+        //            Tag = obj
+        //        };
+
+        //        Canvas.SetLeft(shape, obj.Location.X);
+        //        Canvas.SetTop(shape, obj.Location.Y);
+
+        //        shape.MouseLeftButtonDown += Shape_MouseLeftButtonDown;
+        //        SimulationCanvas.Children.Add(shape);
+
+
+        //        DrawSearchRange(obj);
+
+        //    }
+        //}
 
         private void DrawSearchRange(LivingBeing entity)
         {
@@ -202,7 +310,7 @@ namespace SimulationApp
                 Opacity = 0.5, // شفافیت
                 IsHitTestVisible = false // این دایره نباید کلیک را دریافت کند
             };
-            
+
             // تنظیم موقعیت دایره جستجو (مرکز آن باید روی موجود قرار بگیرد)
             Canvas.SetLeft(searchRange, entity.Location.X - entity.VisualRange);
             Canvas.SetTop(searchRange, entity.Location.Y - entity.VisualRange);
@@ -211,11 +319,12 @@ namespace SimulationApp
         }
 
 
-
+        Guid selectedObjectId;
         private void Shape_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (sender is Ellipse shape && shape.Tag is PhysicalObject obj)
             {
+                selectedObjectId = obj.Id;
                 SelectedObject = obj; // نمایش شیء انتخاب‌شده در PropertyGrid
             }
         }
@@ -225,7 +334,7 @@ namespace SimulationApp
             isRunning = true;
             while (isRunning)
             {
-                await Task.Delay(500);
+                await Task.Delay(50);
                 await world.UpdateAsync();
 
 

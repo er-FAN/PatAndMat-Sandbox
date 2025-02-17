@@ -1,4 +1,5 @@
-﻿using Simulation.Engine.models;
+﻿using Simulation.Engine.events;
+using Simulation.Engine.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,13 +11,12 @@ namespace Simulation.Engine.tasks
 
     public class EatTask : ITask
     {
-        //Form1 form = new Form1();
         public string Name => "خوردن غذا";
         public bool IsCompleted { get; private set; } = false;
         private int steps = 0;
-        private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+        private ITask? _waitFor;
 
-        public event Action<ITask>? OnCompleted;
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
 
         public ITask? WaitFor
         {
@@ -24,25 +24,29 @@ namespace Simulation.Engine.tasks
             set
             {
                 _waitFor = value;
-                IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+                IsWaited = _waitFor != null;
                 if (WaitFor != null)
                 {
-                    WaitFor.OnCompleted += HandleWaitForCompleted;
+                    WaitFor.OnCompleted += WaitForCompleted;
                 }
             }
         }
         public ITask? Waited { get; set; }
-        public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
+        public bool IsWaited { get; private set; }
         EdibleObject EdibleObject { get; set; } = new EdibleObject();
+
+        public EatTask()
+        {
+            OnCompleted +=WaitForCompleted;
+        }
+
         public void ExecuteStep(LivingBeing being, World world)
         {
-
-            //form.WriteLine($"🍽️ {being.Name} در حال خوردن غذا (مرحله {steps}).");
             steps++;
             if (being.EdibleObjects.Count > 0)
             {
                 EdibleObject = being.EdibleObjects.First();
-                if(EdibleObject != null)
+                if (EdibleObject != null)
                 {
                     if (EdibleObject.Energy > 5)
                     {
@@ -77,7 +81,7 @@ namespace Simulation.Engine.tasks
 
             if (steps >= 3)
             {
-                IsCompleted = true;
+                OnCompleted.Invoke(this, new TaskCompletedEventArgs());
             }
         }
 
@@ -86,10 +90,14 @@ namespace Simulation.Engine.tasks
             throw new NotImplementedException();
         }
 
-        private void HandleWaitForCompleted(ITask completedTask)
+        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            Console.WriteLine($"تسک {Name} دیگر منتظر {completedTask.Name} نیست!");
-            WaitFor = null; // خالی کردن پراپرتی WaitFor      // اجرای تسک بعدی
+            throw new NotImplementedException();
+        }
+
+        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

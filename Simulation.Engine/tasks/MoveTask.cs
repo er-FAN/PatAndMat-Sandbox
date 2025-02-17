@@ -1,4 +1,5 @@
-﻿using Simulation.Engine.models;
+﻿using Simulation.Engine.events;
+using Simulation.Engine.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +15,11 @@ namespace Simulation.Engine.tasks
         public bool IsCompleted { get; private set; } = false;
         public Location Destination;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
+
         public ITask? Waited { get; set; }
-        public event Action<ITask>? OnCompleted;
+
 
         public ITask? WaitFor
         {
@@ -26,7 +30,7 @@ namespace Simulation.Engine.tasks
                 IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
                 if (WaitFor != null)
                 {
-                    WaitFor.OnCompleted += HandleWaitForCompleted;
+                    WaitFor.OnCompleted += WaitForCompleted;
                 }
             }
         }
@@ -37,6 +41,8 @@ namespace Simulation.Engine.tasks
         {
             Destination = destination;
         }
+
+        
 
         public void ExecuteStep(LivingBeing being, World world)
         {
@@ -51,7 +57,7 @@ namespace Simulation.Engine.tasks
             if (being.Location.X == Destination.X && being.Location.Y == Destination.Y)
             {
                 IsCompleted = true;
-                OnCompleted?.Invoke(this);
+                OnCompleted?.Invoke(this,new TaskCompletedEventArgs());
                 //if(Waited != null)
                 //{
                 //    Waited.WaitFor = null;
@@ -68,8 +74,17 @@ namespace Simulation.Engine.tasks
 
         private void HandleWaitForCompleted(ITask completedTask)
         {
-            Console.WriteLine($"تسک {Name} دیگر منتظر {completedTask.Name} نیست!");
-            WaitFor = null; // خالی کردن پراپرتی WaitFor      // اجرای تسک بعدی
+            WaitFor = null;
+        }
+
+        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

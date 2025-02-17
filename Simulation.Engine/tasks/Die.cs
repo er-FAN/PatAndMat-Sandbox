@@ -1,4 +1,5 @@
-﻿using Simulation.Engine.models;
+﻿using Simulation.Engine.events;
+using Simulation.Engine.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Simulation.Engine.tasks
         public bool IsCompleted { get; private set; } = false;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
         public ITask? Waited { get; set; }
-        public event Action<ITask>? OnCompleted;
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
 
         public ITask? WaitFor
         {
@@ -38,5 +39,15 @@ namespace Simulation.Engine.tasks
         }
 
         public void ForceStop() { }
+
+        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

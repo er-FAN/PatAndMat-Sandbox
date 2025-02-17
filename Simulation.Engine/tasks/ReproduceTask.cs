@@ -1,4 +1,5 @@
-﻿using Simulation.Engine.models;
+﻿using Simulation.Engine.events;
+using Simulation.Engine.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,8 +15,11 @@ namespace Simulation.Engine.tasks
         public bool IsCompleted { get; private set; } = false;
 
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
+
         public ITask? Waited { get; set; }
-        public event Action<ITask>? OnCompleted;
+
 
         public ITask? WaitFor
         {
@@ -29,6 +33,7 @@ namespace Simulation.Engine.tasks
 
         public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
+
         public void ExecuteStep(LivingBeing being, World world)
         {
             //form.WriteLine($"🍼 {being.Name} تولیدمثل کرد!");
@@ -40,6 +45,16 @@ namespace Simulation.Engine.tasks
         }
 
         public void ForceStop()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
         {
             throw new NotImplementedException();
         }

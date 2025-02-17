@@ -1,4 +1,5 @@
-﻿using Simulation.Engine.models;
+﻿using Simulation.Engine.events;
+using Simulation.Engine.models;
 
 namespace Simulation.Engine.tasks
 {
@@ -7,7 +8,6 @@ namespace Simulation.Engine.tasks
         public string Name => "جستجو";
         public PhysicalObject searchFor;
         public bool IsCompleted { get; private set; } = false;
-        public event Action<ITask>? OnCompleted;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
 
         public ITask? WaitFor
@@ -19,7 +19,7 @@ namespace Simulation.Engine.tasks
                 IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
                 if (WaitFor != null)
                 {
-                    WaitFor.OnCompleted += HandleWaitForCompleted;
+                    WaitFor.OnCompleted += WaitForCompleted;
                 }
 
             }
@@ -32,7 +32,7 @@ namespace Simulation.Engine.tasks
         public List<PhysicalObject> foundObjects = [];
         MoveTask moveTask;
 
-
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
 
         public SearchTask(PhysicalObject searchFor)
         {
@@ -58,7 +58,7 @@ namespace Simulation.Engine.tasks
                     being.EdibleObjects.Add(edibleObject);
                 }
                 IsCompleted = true; // اگر اشیائی پیدا شدند، تسک کامل می‌شود
-                OnCompleted?.Invoke(this);
+                OnCompleted.Invoke(this,new TaskCompletedEventArgs());
                 return;
             }
 
@@ -147,6 +147,16 @@ namespace Simulation.Engine.tasks
         {
             Console.WriteLine($"تسک {Name} دیگر منتظر {completedTask.Name} نیست!");
             WaitFor = null; // خالی کردن پراپرتی WaitFor      // اجرای تسک بعدی
+        }
+
+        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 

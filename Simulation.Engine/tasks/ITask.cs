@@ -1,4 +1,5 @@
-﻿using Simulation.Engine.models;
+﻿using Simulation.Engine.events;
+using Simulation.Engine.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,9 @@ namespace Simulation.Engine.tasks
         public ITask? Waited { get; set; }
         bool IsWaited { get; }
         void ExecuteStep(LivingBeing being, World world);
-        public event Action<ITask>? OnCompleted; // رویدادی که بعد از اتمام تسک اجرا می‌شود
+        event EventHandler<TaskCompletedEventArgs> OnCompleted;
+        void TaskCompleted(object? sender, TaskCompletedEventArgs e);
+        void WaitForCompleted(object? sender, TaskCompletedEventArgs e);
         void ForceStop();
     }
 }

@@ -1,10 +1,5 @@
 ﻿using Simulation.Engine.events;
 using Simulation.Engine.models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simulation.Engine.tasks
 {
@@ -14,10 +9,9 @@ namespace Simulation.Engine.tasks
         public string Name => "خوردن غذا";
         public bool IsCompleted { get; private set; } = false;
         private int steps = 0;
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted = delegate { };
+
         private ITask? _waitFor;
-
-        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
-
         public ITask? WaitFor
         {
             get => _waitFor;
@@ -27,7 +21,7 @@ namespace Simulation.Engine.tasks
                 IsWaited = _waitFor != null;
                 if (WaitFor != null)
                 {
-                    WaitFor.OnCompleted += WaitForCompleted;
+                    WaitFor.OnCompleted += WaitFor_OnCompleted;
                 }
             }
         }
@@ -35,54 +29,65 @@ namespace Simulation.Engine.tasks
         public bool IsWaited { get; private set; }
         EdibleObject EdibleObject { get; set; } = new EdibleObject();
 
-        public EatTask()
+        public LivingBeing Executer { get; }
+
+        public EatTask(LivingBeing executer)
         {
-            OnCompleted +=WaitForCompleted;
+            Executer = executer;
+            RegisterEvents(executer);
         }
 
-        public void ExecuteStep(LivingBeing being, World world)
+        private void RegisterEvents(LivingBeing executer)
         {
-            steps++;
-            if (being.EdibleObjects.Count > 0)
+            OnCompleted += WaitFor_OnCompleted;
+            executer.EnergyChanged += Being_EnergyChanged;
+        }
+
+        public void ExecuteStep(World world)
+        {
+            bool edibleObjectIsExist = Executer.EdibleObjects.Count > 0 && Executer.EdibleObjects.First() != null;
+            if (edibleObjectIsExist)
             {
-                EdibleObject = being.EdibleObjects.First();
-                if (EdibleObject != null)
-                {
-                    if (EdibleObject.Energy > 5)
-                    {
-
-                        being.Energy += 5;
-                        EdibleObject.Energy -= 5;
-                    }
-                    else if (EdibleObject.Energy > 0)
-                    {
-                        being.Energy += EdibleObject.Energy;
-                        being.EdibleObjects.Remove(EdibleObject);
-                    }
-                }
-                else
-                {
-                    SearchTask searchTask = new SearchTask(new EdibleObject());
-                    searchTask.Waited = this;
-                    WaitFor = searchTask;
-                    being.Tasks.Add(searchTask);
-                }
-
-
+                EdibleObject = Executer.EdibleObjects.First();
+                AddEnergyFromEdibleObjectToBeing();
             }
             else
             {
-                SearchTask searchTask = new SearchTask(new EdibleObject());
-                searchTask.Waited = this;
-                WaitFor = searchTask;
-                being.Tasks.Add(searchTask);
+                AddSearchTaskForFindEdibleObject();
             }
+        }
 
-
-            if (steps >= 3)
+        private void AddEnergyFromEdibleObjectToBeing()
+        {
+            if (EdibleObject.Energy > 5)
             {
-                OnCompleted.Invoke(this, new TaskCompletedEventArgs());
+                Eat();
             }
+            else if (EdibleObject.Energy > 0)
+            {
+                EatAndRemoveFinishedEdibleObject();
+            }
+
+        }
+
+        private void EatAndRemoveFinishedEdibleObject()
+        {
+            Executer.Energy += EdibleObject.Energy;
+            Executer.EdibleObjects.Remove(EdibleObject);
+        }
+
+        private void Eat()
+        {
+            Executer.Energy += 5;
+            EdibleObject.Energy -= 5;
+        }
+
+        private void AddSearchTaskForFindEdibleObject()
+        {
+            SearchTask searchTask = new SearchTask(Executer, new EdibleObject());
+            searchTask.Waited = this;
+            WaitFor = searchTask;
+            Executer.Tasks.Add(searchTask);
         }
 
         public void ForceStop()
@@ -90,14 +95,22 @@ namespace Simulation.Engine.tasks
             throw new NotImplementedException();
         }
 
-        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        public void Task_OnCompleted(object? sender, TaskCompletedEventArgs e)
+        {
+            IsCompleted = true;
+        }
+
+        public void WaitFor_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
             throw new NotImplementedException();
         }
 
-        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        void Being_EnergyChanged(object? sender, EnergyChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            if (e.CurrentBeingEnergy >= 70)
+            {
+                OnCompleted.Invoke(this, new TaskCompletedEventArgs());
+            }
         }
     }
 }

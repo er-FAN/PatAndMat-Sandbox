@@ -13,6 +13,7 @@ namespace Simulation.Engine.tasks
     {
         //Form1 form = new Form1();
         public string Name => "استراحت";
+        public LivingBeing Executer { get; }
         public bool IsCompleted { get; private set; } = false;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
         public ITask? Waited { get; set; }
@@ -28,20 +29,31 @@ namespace Simulation.Engine.tasks
 
         public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
-        int steps = 0;
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted = delegate { };
 
-        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
-
-        public void ExecuteStep(LivingBeing being, World world)
+        public RestTask(LivingBeing executer)
         {
-            //form.WriteLine($"💤 {being.Name} در حال استراحت است.");
-            steps++;
-            being.Sleep -= 4;
-            if (being.Sleep <= 0)
+            Executer = executer;
+            RegisterEvents();
+        }
+
+        private void RegisterEvents()
+        {
+            OnCompleted += Task_OnCompleted;
+            Executer.SleepChanged += Executer_SleepChanged;
+        }
+
+        private void Executer_SleepChanged(object? sender, SleepChangedEventArgs e)
+        {
+            if (e.CurrentBeingSleep < 30)
             {
-                IsCompleted = true;
-                steps = 0;
+                OnCompleted.Invoke(this, new TaskCompletedEventArgs());
             }
+        }
+
+        public void ExecuteStep(World world)
+        {
+            Executer.Sleep -= 4;
         }
 
 
@@ -51,14 +63,14 @@ namespace Simulation.Engine.tasks
             throw new NotImplementedException();
         }
 
-        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        public void Task_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            throw new NotImplementedException();
+            IsCompleted = true;
         }
 
-        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        public void WaitFor_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            throw new NotImplementedException();
+            IsWaited = false;
         }
     }
 }

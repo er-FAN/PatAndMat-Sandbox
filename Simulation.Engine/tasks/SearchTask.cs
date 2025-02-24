@@ -6,7 +6,8 @@ namespace Simulation.Engine.tasks
     public class SearchTask : ITask
     {
         public string Name => "جستجو";
-        public PhysicalObject searchFor;
+        public LivingBeing Executer { get; }
+        public PhysicalObject SearchFor { get; }
         public bool IsCompleted { get; private set; } = false;
         private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
 
@@ -19,7 +20,7 @@ namespace Simulation.Engine.tasks
                 IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
                 if (WaitFor != null)
                 {
-                    WaitFor.OnCompleted += WaitForCompleted;
+                    WaitFor.OnCompleted += WaitFor_OnCompleted;
                 }
 
             }
@@ -34,35 +35,38 @@ namespace Simulation.Engine.tasks
 
         public event EventHandler<TaskCompletedEventArgs> OnCompleted;
 
-        public SearchTask(PhysicalObject searchFor)
+        public SearchTask(LivingBeing executer,PhysicalObject searchFor)
         {
-            this.searchFor = searchFor;
-            moveTask = new MoveTask(new Location(0, 0));
+            SearchFor = searchFor;
+            Executer = executer;
+            moveTask = new MoveTask(Executer,new Location(0, 0));
+            OnCompleted += Task_OnCompleted;
 
         }
 
-        public void ExecuteStep(LivingBeing being, World world)
+        public void ExecuteStep(World world)
         {
             FilterPhysicalObjectsBySearchObjectType(world);
 
             // پیدا کردن اشیاء در محدوده دید
-            foundObjects = objects.Where(obj => IsInVisualRange(being, obj)).ToList();
+            foundObjects = objects.Where(obj => IsInVisualRange(obj)).ToList();
 
             if (foundObjects.Any())
             {
-                MoveToFoundedObjectLocation(being);
+                MoveToFoundedObjectLocation();
                 foreach (PhysicalObject obj in foundObjects)
                 {
                     EdibleObject edibleObject = world.EdibleObjects.Where(x => x.Id == obj.Id).FirstOrDefault();
                     world.EdibleObjects.Remove(edibleObject);
-                    being.EdibleObjects.Add(edibleObject);
+                    Executer.EdibleObjects.Add(edibleObject);
                 }
                 IsCompleted = true; // اگر اشیائی پیدا شدند، تسک کامل می‌شود
-                OnCompleted.Invoke(this,new TaskCompletedEventArgs());
+                TaskCompletedEventArgs e = new TaskCompletedEventArgs();
+                OnCompleted.Invoke(this, e);
                 return;
             }
 
-            MoveToRandomLocation(being, world);
+            MoveToRandomLocation(world);
 
         }
 
@@ -80,29 +84,40 @@ namespace Simulation.Engine.tasks
             objects.AddRange(world.EdibleObjects);
         }
 
-        private void MoveToFoundedObjectLocation(LivingBeing being)
+        private void MoveToFoundedObjectLocation()
         {
             moveTask.Destination = foundObjects.First().Location;
-
-
-            being.Tasks.Add(moveTask);
+            Executer.Tasks.Add(moveTask);
         }
 
-        private void MoveToRandomLocation(LivingBeing being, World world)
+        private void MoveToRandomLocation(World world)
+        {
+            AddMoveTask(world);
+            WaitForMoveTaskEnd();
+        }
+
+        private void AddMoveTask(World world)
         {
             Location location = new(0, 0);
-
-            int newX = RandomMoveOffset(-25, 25);
-            int newY = RandomMoveOffset(-25, 25);
-            location = new Location(being.Location.X + newX, being.Location.Y + newY);
-            location = CheckIsInCorners(location, world.Width, world.Height);
-
-
+            location = GetRandomLocation(world);
             moveTask.Destination = location;
-            // اگر چیزی پیدا نشد، حرکت کنید
-            being.Tasks.Add(moveTask);
+            Executer.Tasks.Add(moveTask);
+        }
+
+        private void WaitForMoveTaskEnd()
+        {
             moveTask.Waited = this;
             WaitFor = moveTask;
+        }
+
+        private Location GetRandomLocation(World world)
+        {
+            Location location;
+            int newX = RandomMoveOffset(-25, 25);
+            int newY = RandomMoveOffset(-25, 25);
+            location = new Location(Executer.Location.X + newX, Executer.Location.Y + newY);
+            location = CheckIsInCorners(location, world.Width, world.Height);
+            return location;
         }
 
         private Location CheckIsInCorners(Location location, int width, int height)
@@ -118,14 +133,14 @@ namespace Simulation.Engine.tasks
             return location;
         }
 
-        private bool IsInVisualRange(LivingBeing being, PhysicalObject obj)
+        private bool IsInVisualRange(PhysicalObject obj)
         {
             // فاصله بین موجود زنده و جسم هدف
-            int deltaX = Math.Abs(being.Location.X - obj.Location.X);
-            int deltaY = Math.Abs(being.Location.Y - obj.Location.Y);
+            int deltaX = Math.Abs(Executer.Location.X - obj.Location.X);
+            int deltaY = Math.Abs(Executer.Location.Y - obj.Location.Y);
 
             // بررسی اینکه جسم در محدوده دید است یا نه
-            return deltaX <= being.VisualRange && deltaY <= being.VisualRange;
+            return deltaX <= Executer.VisualRange && deltaY <= Executer.VisualRange;
         }
 
         private int RandomMoveOffset(params int[] numbers)
@@ -149,12 +164,12 @@ namespace Simulation.Engine.tasks
             WaitFor = null; // خالی کردن پراپرتی WaitFor      // اجرای تسک بعدی
         }
 
-        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        public void Task_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            throw new NotImplementedException();
+            IsCompleted = true;
         }
 
-        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        public void WaitFor_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
             throw new NotImplementedException();
         }

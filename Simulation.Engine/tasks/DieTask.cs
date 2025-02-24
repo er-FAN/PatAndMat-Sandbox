@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Simulation.Engine.tasks
 {
-    public class Die : ITask
+    public class DieTask : ITask
     {
         public string Name => "مردن";
 
@@ -24,30 +24,47 @@ namespace Simulation.Engine.tasks
             {
                 _waitFor = value;
                 IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+                if (WaitFor != null)
+                {
+                    WaitFor.OnCompleted += WaitFor_OnCompleted;
+                }
             }
         }
 
         public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
 
+        public LivingBeing Executer { get; }
 
-        public void ExecuteStep(LivingBeing being, World world)
+        public DieTask(LivingBeing executer)
         {
-            being.IsAlive = false;
-            world.DiedEntities.Add(being);
-            world.Entities.Remove(being);
-            IsCompleted = true;
+            Executer = executer;
+            OnCompleted += Task_OnCompleted;
+        }
+
+        public void ExecuteStep(World world)
+        {
+            Die(world);
+            OnCompleted.Invoke(this, new TaskCompletedEventArgs());
+        }
+
+        private void Die(World world)
+        {
+            Executer.IsAlive = false;
+            world.DiedEntities.Add(Executer);
+            world.Entities.Remove(Executer);
         }
 
         public void ForceStop() { }
 
-        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        public void Task_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            throw new NotImplementedException();
+            IsCompleted = true;
         }
 
-        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
+        public void WaitFor_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            throw new NotImplementedException();
+            IsWaited = false;
         }
+
     }
 }

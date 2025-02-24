@@ -12,14 +12,15 @@ namespace Simulation.Engine.tasks
     {
 
         string Name { get; }
+        LivingBeing Executer { get; }
         bool IsCompleted { get; }
         public ITask? WaitFor { get; set; }
         public ITask? Waited { get; set; }
         bool IsWaited { get; }
-        void ExecuteStep(LivingBeing being, World world);
+        void ExecuteStep(World world);
         event EventHandler<TaskCompletedEventArgs> OnCompleted;
-        void TaskCompleted(object? sender, TaskCompletedEventArgs e);
-        void WaitForCompleted(object? sender, TaskCompletedEventArgs e);
+        void Task_OnCompleted(object? sender, TaskCompletedEventArgs e);
+        void WaitFor_OnCompleted(object? sender, TaskCompletedEventArgs e);
         void ForceStop();
     }
 }

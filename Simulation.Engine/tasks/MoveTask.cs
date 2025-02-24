@@ -1,20 +1,16 @@
 ﻿using Simulation.Engine.events;
 using Simulation.Engine.models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simulation.Engine.tasks
 {
     public class MoveTask : ITask
     {
         public string Name => "حرکت";
-        //Form1 form=new Form1();
+        public LivingBeing Executer { get; }
+        public float SpeedFactor { get; set; }
         public bool IsCompleted { get; private set; } = false;
         public Location Destination;
-        private ITask? _waitFor; // فیلد پشتیبان برای WaitFor
+        private ITask? _waitFor;
 
         public event EventHandler<TaskCompletedEventArgs> OnCompleted;
 
@@ -27,44 +23,59 @@ namespace Simulation.Engine.tasks
             set
             {
                 _waitFor = value;
-                IsWaited = _waitFor != null; // به‌روزرسانی IsWaited هنگام تغییر WaitFor
+                IsWaited = _waitFor != null;
                 if (WaitFor != null)
                 {
-                    WaitFor.OnCompleted += WaitForCompleted;
+                    WaitFor.OnCompleted += WaitFor_OnCompleted;
                 }
             }
         }
 
-        public bool IsWaited { get; private set; } // فقط‌خوان و به‌صورت خودکار به‌روزرسانی می‌شود
+        public bool IsWaited { get; private set; }
 
-        public MoveTask(Location destination)
+        public MoveTask(LivingBeing executer, Location destination)
         {
+            Executer = executer;
             Destination = destination;
+            OnCompleted += Task_OnCompleted;
+            Executer.EnergyChanged += Executer_EnergyChanged;
         }
 
-        
-
-        public void ExecuteStep(LivingBeing being, World world)
+        private void Executer_EnergyChanged(object? sender, EnergyChangedEventArgs e)
         {
-            //form.WriteLine($"🚶‍♂️ {being.Name} در حال حرکت به سمت {Destination} است.");
+            if (e.CurrentBeingEnergy < 50)
+            {
+                SpeedFactor = e.CurrentBeingEnergy / 50;
+            }
+        }
 
-            if (being.Location.X < Destination.X) being.Location.X++;
-            else if (being.Location.X > Destination.X) being.Location.X--;
-
-            if (being.Location.Y < Destination.Y) being.Location.Y++;
-            else if (being.Location.Y > Destination.Y) being.Location.Y--;
-
-            if (being.Location.X == Destination.X && being.Location.Y == Destination.Y)
+        public void ExecuteStep(World world)
+        {
+            Move();
+            bool ArrivedDestination = Executer.Location.X == Destination.X && Executer.Location.Y == Destination.Y;
+            if (ArrivedDestination)
             {
                 IsCompleted = true;
-                OnCompleted?.Invoke(this,new TaskCompletedEventArgs());
-                //if(Waited != null)
-                //{
-                //    Waited.WaitFor = null;
-                //}
-                
-                //form.WriteLine($"✅ {being.Name} به مقصد خود رسید.");
+                OnCompleted?.Invoke(this, new TaskCompletedEventArgs());
             }
+        }
+
+        private void Move()
+        {
+            MoveInX();
+            MoveInY();
+        }
+
+        private void MoveInY()
+        {
+            if (Executer.Location.Y < Destination.Y) Executer.Location.Y++;
+            else if (Executer.Location.Y > Destination.Y) Executer.Location.Y--;
+        }
+
+        private void MoveInX()
+        {
+            if (Executer.Location.X < Destination.X) Executer.Location.X++;
+            else if (Executer.Location.X > Destination.X) Executer.Location.X--;
         }
 
         public void ForceStop()
@@ -72,19 +83,14 @@ namespace Simulation.Engine.tasks
             throw new NotImplementedException();
         }
 
-        private void HandleWaitForCompleted(ITask completedTask)
+        public void Task_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            WaitFor = null;
+            IsCompleted = true;
         }
 
-        public void TaskCompleted(object? sender, TaskCompletedEventArgs e)
+        public void WaitFor_OnCompleted(object? sender, TaskCompletedEventArgs e)
         {
-            throw new NotImplementedException();
-        }
-
-        public void WaitForCompleted(object? sender, TaskCompletedEventArgs e)
-        {
-            throw new NotImplementedException();
+            IsWaited = false;
         }
     }
 }

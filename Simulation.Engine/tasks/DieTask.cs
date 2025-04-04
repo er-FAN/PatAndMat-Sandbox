@@ -50,6 +50,11 @@ namespace Simulation.Engine.tasks
         private void Die(World world)
         {
             Executer.IsAlive = false;
+            MoveDiedEntityToDiedEntitiesList(world);
+        }
+
+        private void MoveDiedEntityToDiedEntitiesList(World world)
+        {
             world.DiedEntities.Add(Executer);
             world.Entities.Remove(Executer);
         }

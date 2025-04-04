@@ -33,15 +33,20 @@ namespace Simulation.Engine.tasks
         public List<PhysicalObject> foundObjects = [];
         MoveTask moveTask;
 
-        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted = delegate { };
 
-        public SearchTask(LivingBeing executer,PhysicalObject searchFor)
+        public SearchTask(LivingBeing executer, PhysicalObject searchFor)
         {
             SearchFor = searchFor;
             Executer = executer;
-            moveTask = new MoveTask(Executer,new Location(0, 0));
-            OnCompleted += Task_OnCompleted;
+            moveTask = new MoveTask(Executer, new Location(0, 0));
+            RegisterEvents();
 
+        }
+
+        private void RegisterEvents()
+        {
+            OnCompleted += Task_OnCompleted;
         }
 
         public void ExecuteStep(World world)

@@ -45,8 +45,8 @@ namespace Simulation.Engine.tasks
 
         public void ExecuteStep(World world)
         {
-            bool edibleObjectIsExist = Executer.EdibleObjects.Count > 0 && Executer.EdibleObjects.First() != null;
-            if (edibleObjectIsExist)
+            bool haveFood = Executer.EdibleObjects.Count > 0 && Executer.EdibleObjects.First() != null;
+            if (haveFood)
             {
                 EdibleObject = Executer.EdibleObjects.First();
                 AddEnergyFromEdibleObjectToBeing();

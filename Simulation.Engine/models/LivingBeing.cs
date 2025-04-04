@@ -1,10 +1,6 @@
 ﻿using Simulation.Engine.events;
 using Simulation.Engine.tasks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 
 namespace Simulation.Engine.models
@@ -17,40 +13,45 @@ namespace Simulation.Engine.models
         public int VisualRange { get; set; } = 500;
         public bool IsAlive { get; set; }
 
-        private int _Energy;
-        public int Energy
-        {
-            get => _Energy;
-            set
-            {
-                int addedEnergy = value - _Energy;
-                _Energy = value;
-                EnergyChanged.Invoke(this, new EnergyChangedEventArgs(addedEnergy, _Energy));
-            }
-        }
+        //private int _Energy;
+        //public int Energy
+        //{
+        //    get => _Energy;
+        //    set
+        //    {
+        //        int addedEnergy = value - _Energy;
+        //        _Energy = value;
+        //        EnergyChanged.Invoke(this, new EnergyChangedEventArgs(addedEnergy, _Energy));
+        //    }
+        //}
+
+        public SensitiveVariable<int, EnergyChangedEventArgs> Energy { get; set; }
 
         private void LivingBeing_EnergyChanged(object? sender, EnergyChangedEventArgs e)
         {
             throw new NotImplementedException();
         }
 
-        private int _Sleep;
-        public int Sleep
-        {
-            get => _Sleep;
-            set
-            {
-                int addedSleep = value - _Sleep;
-                _Sleep = value;
-                SleepChanged.Invoke(this, new SleepChangedEventArgs(addedSleep, _Sleep));
-            }
-        }
+        //private int _Sleep;
+        //public int Sleep
+        //{
+        //    get => _Sleep;
+        //    set
+        //    {
+        //        int addedSleep = value - _Sleep;
+        //        _Sleep = value;
+        //        SleepChanged.Invoke(this, new SleepChangedEventArgs(addedSleep, _Sleep));
+        //    }
+        //}
+
+        public SensitiveVariable<int,SleepChangedEventArgs> Sleep { get; set; }
+
         public bool IsSleep { get; set; }
         public List<ITask> Tasks { get; set; } = new List<ITask>();
         public List<EdibleObject> EdibleObjects { get; set; } = new List<EdibleObject>();
         public EventManager EventManager { get; set; } = new EventManager();
-        public event EventHandler<EnergyChangedEventArgs> EnergyChanged;
-        public event EventHandler<SleepChangedEventArgs> SleepChanged;
+        public event EventHandler<EnergyChangedEventArgs> EnergyChanged = delegate { };
+        public event EventHandler<SleepChangedEventArgs> SleepChanged = delegate { };
 
         public LivingBeing(string name, Location location)
         {
@@ -62,6 +63,9 @@ namespace Simulation.Engine.models
             EventManager.RegisterEvent("Die", () => Tasks.Add(new DieTask(this)));
             EnergyChanged += LivingBeing_EnergyChanged;
             SleepChanged += LivingBeing_SleepChanged;
+
+            Energy = new SensitiveVariable<int,EnergyChangedEventArgs>(100, EnergyChanged);
+            Sleep = new SensitiveVariable<int,SleepChangedEventArgs> (0, SleepChanged);
         }
 
         private void SetProperties(string name, Location location)
@@ -70,14 +74,14 @@ namespace Simulation.Engine.models
             Name = name;
             Age = 0;
             IsAlive = true;
-            Energy = 100;
-            Sleep = 0;
+            Energy.Value = 100;
+            Sleep.Value = 0;
             Location = location;
         }
 
         private void LivingBeing_SleepChanged(object? sender, SleepChangedEventArgs e)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void Update(World world)
@@ -88,8 +92,8 @@ namespace Simulation.Engine.models
             }
 
             Age++;
-            Sleep++;
-            Energy -= IsSleep ? 1 : 2;
+            Sleep.Value++;
+            Energy.Value -= IsSleep ? 1 : 2;
 
 
             CheckConditions(world);
@@ -124,15 +128,18 @@ namespace Simulation.Engine.models
             //if (Sleep > 20) EventManager.TriggerEvent("Tired");
             if (!IsSleep)
             {
-                if (Energy < 30) EventManager.TriggerEvent("Hungry");
+                if (Energy.Value < 30) EventManager.TriggerEvent("Hungry");
                 //if (Age > 20 && Age % 50 == 0) EventManager.TriggerEvent("Reproduce");
             }
-            if (Age > 10000000 || Energy == 0)
+            if (Age > 10000000 || Energy.Value == 0)
             {
                 //EventManager.TriggerEvent("Die");
             }
 
         }
+
+        
+
 
         public override string ToString()
         {

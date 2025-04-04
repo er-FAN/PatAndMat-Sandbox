@@ -12,7 +12,7 @@ namespace Simulation.Engine.tasks
         public Location Destination;
         private ITask? _waitFor;
 
-        public event EventHandler<TaskCompletedEventArgs> OnCompleted;
+        public event EventHandler<TaskCompletedEventArgs> OnCompleted = delegate { };
 
         public ITask? Waited { get; set; }
 
@@ -37,6 +37,11 @@ namespace Simulation.Engine.tasks
         {
             Executer = executer;
             Destination = destination;
+            RegisterEvents();
+        }
+
+        private void RegisterEvents()
+        {
             OnCompleted += Task_OnCompleted;
             Executer.EnergyChanged += Executer_EnergyChanged;
         }

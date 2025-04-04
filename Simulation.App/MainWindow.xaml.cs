@@ -133,7 +133,7 @@ namespace SimulationApp
             SimulationCanvas.Height = world.Height;
             var human1 = new LivingBeing("آدم", new Location(500, 600));
 
-            human1.Tasks.Add(new SearchTask(new EdibleObject()));
+            human1.Tasks.Add(new SearchTask(human1,new EdibleObject()));
             human1.Width = 1;
             human1.Height = 1;
             world.AddEntity(human1);

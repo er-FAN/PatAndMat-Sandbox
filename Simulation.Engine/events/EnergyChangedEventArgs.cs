@@ -6,14 +6,20 @@ using System.Threading.Tasks;
 
 namespace Simulation.Engine.events
 {
-    public class EnergyChangedEventArgs : EventArgs
+    public class EnergyChangedEventArgs : EventArgs, IConstructible<int>
     {
-        public int AddedEnergyValue { get; }
-        public int CurrentBeingEnergy { get; }
-        public EnergyChangedEventArgs(int addedEnergyValue, int currentBeingEnergy)
+        public int AddedEnergyValue { get; private set; }
+        public int CurrentBeingEnergy { get; private set; }
+        
+        public EnergyChangedEventArgs()
         {
-            AddedEnergyValue = addedEnergyValue;
-            CurrentBeingEnergy = currentBeingEnergy;
+            
+        }
+
+        public void Construct(int param1, int param2)
+        {
+            AddedEnergyValue = param1;
+            CurrentBeingEnergy = param2;
         }
     }
 }

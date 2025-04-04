@@ -47,7 +47,6 @@ namespace Simulation.Engine.tasks
         {
             LivingBeing human = new LivingBeing("فرزند_" + Executer.Name, Executer.Location);
             world.Entities.Add(human);
-            world.Output.NewEntities.Add(human);
         }
 
         public void ForceStop()

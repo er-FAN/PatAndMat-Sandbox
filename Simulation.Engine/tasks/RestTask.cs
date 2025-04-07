@@ -53,7 +53,7 @@ namespace Simulation.Engine.tasks
 
         public void ExecuteStep(World world)
         {
-            Executer.Sleep -= 4;
+            Executer.Sleep.Value -= 4;
         }
 
 

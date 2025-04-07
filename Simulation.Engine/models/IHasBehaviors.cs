@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simulation.Engine.events
+namespace Simulation.Engine.models
 {
-    public interface IChangedEvent
+    public interface IHasBehaviors
     {
-
+        List<IBehavior> Behaviors { get; }
     }
 }

@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 
 namespace Simulation.Engine.events
 {
-    public class TaskCompletedEventArgs : EventArgs
+    public interface IHasEventListener
     {
-        public TaskCompletedEventArgs() 
-        {
-            
-        }
+        public List<IEventListener> EventListeners { get; set; }
     }
 }

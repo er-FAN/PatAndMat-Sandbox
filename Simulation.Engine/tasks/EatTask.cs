@@ -72,13 +72,13 @@ namespace Simulation.Engine.tasks
 
         private void EatAndRemoveFinishedEdibleObject()
         {
-            Executer.Energy += EdibleObject.Energy;
+            Executer.Energy.Value += EdibleObject.Energy;
             Executer.EdibleObjects.Remove(EdibleObject);
         }
 
         private void Eat()
         {
-            Executer.Energy += 5;
+            Executer.Energy.Value += 5;
             EdibleObject.Energy -= 5;
         }
 

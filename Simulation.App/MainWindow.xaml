@@ -4,60 +4,6 @@
         Title="Simulation" Height="600" Width="800">
 
     <Grid>
-        <!-- تعریف ساختار گرید -->
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <!-- بخش اصلی (Canvas + اسکرول) -->
-            <RowDefinition Height="50" />
-            <!-- کنترل‌ها -->
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <!-- Canvas -->
-            <ColumnDefinition Width="250" />
-            <!-- PropertyGrid -->
-        </Grid.ColumnDefinitions>
-
-        <!-- 🎨 قرار دادن Canvas داخل ScrollViewer -->
-        <ScrollViewer x:Name="MapScrollViewer"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto"
-                      PreviewMouseWheel="ScrollViewer_MouseWheel">
-            <!-- کانتینر برای زوم و حرکت نقشه -->
-            <Grid>
-                <Canvas x:Name="SimulationCanvas"
-                        Width="2000" Height="2000"
-                        Background="White"
-                        MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
-                        MouseRightButtonDown="Canvas_MouseRightButtonDown"
-                        MouseRightButtonUp="Canvas_MouseRightButtonUp"
-                        MouseMove="Canvas_MouseMove">
-
-                    <Canvas.RenderTransform>
-                        <TransformGroup>
-                            <ScaleTransform x:Name="ZoomTransform" ScaleX="1" ScaleY="1"/>
-                            <TranslateTransform x:Name="TranslateTransform"/>
-                        </TransformGroup>
-                    </Canvas.RenderTransform>
-
-                </Canvas>
-            </Grid>
-        </ScrollViewer>
-
-
-        <!-- 🛠️ بخش دکمه‌های کنترلی -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" Background="White">
-            <Button Content="شروع" Click="StartSimulation_Click" Margin="5"/>
-            <Button Content="توقف" Click="StopSimulation_Click" Margin="5"/>
-            <Button Content="ریست" Click="ResetSimulation_Click" Margin="5"/>
-        </StackPanel>
-
-        <!-- 🔍 بخش PropertyGrid برای نمایش اطلاعات اشیاء -->
-        <Border Grid.Row="0" Grid.Column="1" Background="White" Margin="5">
-            <StackPanel>
-                <TextBlock Text="جزئیات شیء انتخاب‌شده:" FontWeight="Bold" Margin="5"/>
-                <ContentControl Name="PropertyGridControl" Content="{Binding SelectedObject}"/>
-            </StackPanel>
-        </Border>
+       
     </Grid>
 </Window>

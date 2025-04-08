@@ -2,9 +2,8 @@
 
 namespace Simulation.Engine.models
 {
-    public interface ISimulableObject
+    public interface ISimulableObject: IHasBehaviors, IHasRelations, IHasEventListener
     {
         public Guid Id { get; set; }
-        public List<IEventListener> EventListeners { get; }
     }
 }

@@ -1,9 +1,6 @@
-﻿<Window x:Class="SimulationApp.MainWindow"
+﻿<Window x:Class="Simulation.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Simulation" Height="600" Width="800">
-
-    <Grid>
-       
-    </Grid>
+        Title="Ball Simulation" Height="600" Width="800" SizeChanged="Window_SizeChanged">
+    <Canvas Name="SimulationCanvas" Background="Black"/>
 </Window>

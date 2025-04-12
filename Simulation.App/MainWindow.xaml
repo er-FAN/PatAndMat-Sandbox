@@ -1,6 +1,11 @@
 ﻿<Window x:Class="Simulation.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ball Simulation" Height="600" Width="800" SizeChanged="Window_SizeChanged">
-    <Canvas Name="SimulationCanvas" Background="Black"/>
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Simulation" Height="450" Width="800">
+    <Grid>
+        <Canvas Name="SimulationCanvas" Background="White"/>
+    </Grid>
 </Window>

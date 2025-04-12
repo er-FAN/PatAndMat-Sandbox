@@ -8,12 +8,7 @@ namespace Simulation.Engine.models
     {
         public List<ISimulableObject> Objects { get; } = new();
         public List<IRule> Rules { get; } = new();
-        public EventBus Events { get; }
-
-        public SimulationContext(EventBus eventBus)
-        {
-            Events = eventBus;
-        }
+        public EventBus ContextEventBus { get; } = new();
     }
 
 }

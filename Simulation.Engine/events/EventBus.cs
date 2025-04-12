@@ -5,22 +5,20 @@ namespace Simulation.Engine.events
 {
     public class EventBus
     {
-        private readonly List<ISimulableObject> allObjects;
-
-        public EventBus(List<ISimulableObject> objects)
-        {
-            allObjects = objects;
-        }
+        public List<ISimulableObject> allObjects = [];
 
         public void Publish(ISimulationEvent e)
         {
             foreach (var obj in allObjects)
             {
-                foreach (var listener in obj.EventListeners)
+                if (obj is IHasEventListener eventListener)
                 {
-                    if (listener.ShouldListen(e))
+                    foreach (var listener in eventListener.EventListeners)
                     {
-                        listener.OnEvent(e);
+                        if (listener.ShouldListen(e))
+                        {
+                            listener.OnEvent(e);
+                        }
                     }
                 }
             }

@@ -2,7 +2,7 @@
 
 namespace Simulation.Engine.models
 {
-    public interface ISimulableObject: IHasBehaviors, IHasRelations, IHasEventListener
+    public interface ISimulableObject
     {
         public Guid Id { get; set; }
     }

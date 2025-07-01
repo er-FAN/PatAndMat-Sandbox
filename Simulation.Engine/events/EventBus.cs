@@ -3,22 +3,33 @@ using System.Runtime.InteropServices.Marshalling;
 
 namespace Simulation.Engine.events
 {
-    public class EventBus
+    public class EventBus(IContext context)
     {
-        public List<ISimulableObject> allObjects = [];
+        public IContext Context { get; private set; } = context;
 
         public void Publish(ISimulationEvent e)
         {
-            foreach (var obj in allObjects)
+            foreach (IContext ctx in Context.ChildContexts)
             {
-                if (obj is IHasEventListener eventListener)
+                foreach (IEventListener listener in ctx.Listeners)
                 {
-                    foreach (var listener in eventListener.EventListeners)
+                    if (listener.ShouldListen(e))
                     {
-                        if (listener.ShouldListen(e))
-                        {
-                            listener.OnEvent(e);
-                        }
+                        listener.OnEvent(e);
+                    }
+                }
+            }
+        }
+
+        public void PublishInObjects(ISimulationEvent e)
+        {
+            foreach (ISimulableObject obj in Context.Objects)
+            {
+                foreach (IEventListener listener in obj.Listeners)
+                {
+                    if (listener.ShouldListen(e))
+                    {
+                        listener.OnEvent(e);
                     }
                 }
             }

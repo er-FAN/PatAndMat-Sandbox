@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Simulation.Engine.models
+namespace Simulation.Engine.Components.physic
 {
-    public interface IHasBehaviors
+    public interface IGravity : IComponent
     {
-        List<IBehavior> Behaviors { get; }
     }
 }

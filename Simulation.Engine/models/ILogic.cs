@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Simulation.Engine.models
 {
-    public interface IRule
+    public interface ILogic
     {
-        void Evaluate(SimulationContext context);
+        void Apply(ISimulableObject simulableObject, IContext context);
     }
-
 }

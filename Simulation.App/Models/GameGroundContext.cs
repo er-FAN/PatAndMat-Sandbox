@@ -80,41 +80,41 @@ namespace Simulation.App.Models
                         {
                             if (snakeBodyPart.Y <= w.Position.Y)
                             {
-                                snakeBodyContext.Logics = [];
-                                snakeBodyPart.GetComponent<WpfRender>().SpriteId =
-                                    "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_xx.png";
+                                Collision(snakeBodyContext, snakeBodyPart);
                             }
                         }
                         if(snakeBodyContext.Direction == Direction.Down && w.Direction == Direction.Down)
                         {
                             if (snakeBodyPart.Y >= w.Position.Y)
                             {
-                                snakeBodyContext.Logics = [];
-                                snakeBodyPart.GetComponent<WpfRender>().SpriteId =
-                                    "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_xx.png";
+                                Collision(snakeBodyContext, snakeBodyPart);
                             }
                         }
                         if (snakeBodyContext.Direction == Direction.Left && w.Direction == Direction.Left)
                         {
                             if (snakeBodyPart.X <= w.Position.X)
                             {
-                                snakeBodyContext.Logics = [];
-                                snakeBodyPart.GetComponent<WpfRender>().SpriteId =
-                                    "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_xx.png";
+                                Collision(snakeBodyContext, snakeBodyPart);
                             }
                         }
                         if(snakeBodyContext.Direction == Direction.Right && w.Direction == Direction.Right)
                         {
                             if (snakeBodyPart.X >= w.Position.X)
                             {
-                                snakeBodyContext.Logics = [];
-                                snakeBodyPart.GetComponent<WpfRender>().SpriteId =
-                                    "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_xx.png";
+                                Collision(snakeBodyContext, snakeBodyPart);
                             }
                         }
                     }
                 }
             }
+        }
+
+        private static void Collision(SnakeBodyContext? snakeBodyContext, SnakeBodyPart? snakeBodyPart)
+        {
+            snakeBodyContext.Logics = [];
+            snakeBodyContext.Listeners = [];
+            snakeBodyPart.GetComponent<WpfRender>().SpriteId =
+                "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_xx.png";
         }
     }
 }

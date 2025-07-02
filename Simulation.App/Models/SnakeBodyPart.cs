@@ -71,11 +71,14 @@ namespace Simulation.App.Models
     // لوجیک عمومی برای آپدیت کردن Position در WpfRender
     public class UpdateRenderLogic : ILogic
     {
+        int step = 0;
         public void Apply(ISimulableObject obj, IContext ctx)
         {
-            if (obj is SnakeBodyPart part &&
+            step++;
+            if (obj is SnakeBodyPart part && step >= 7 &&
                 part.GetComponent<WpfRender>() is WpfRender r && part.GetComponent<WpfAnimatable>() is WpfAnimatable a)
             {
+                step = 0;
                 if (part.isHead)
                 {
                     r.SpriteId = a.CurrentSpriteAddres;

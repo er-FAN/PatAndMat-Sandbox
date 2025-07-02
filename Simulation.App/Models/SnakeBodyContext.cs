@@ -3,6 +3,7 @@ using Simulation.Engine.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -33,6 +34,7 @@ namespace Simulation.App.Models
 
         public SnakeBodyContext(int startX, int startY, int initialLength, System.Drawing.Color color)
         {
+            ContextEventBus = new(this);
             // ایجاد مار اولیه به طول initialLength به صورت خط افقی
             for (int i = 0; i < initialLength; i++)
             {
@@ -54,7 +56,7 @@ namespace Simulation.App.Models
             {
                 logic.Apply(null, this);
             }
-            // آپدیت رندر هر قطعه
+
             foreach (var part in body)
                 foreach (var logic in part.Logics)
                     logic.Apply(part, this);
@@ -63,11 +65,13 @@ namespace Simulation.App.Models
 
     public class MoveSnakeLogic : ILogic
     {
+        int step = 1;
         public void Apply(ISimulableObject simulableObject, IContext context)
         {
-            if (context is SnakeBodyContext snake)
+            step++;
+            if (context is SnakeBodyContext snake && step >= 7)
             {
-
+                step = 0;
 
                 var head = snake.body.First!.Value;
                 int newX = head.X, newY = head.Y;
@@ -101,14 +105,18 @@ namespace Simulation.App.Models
                     snake.body.AddFirst(tailPart);
                 }
 
-                foreach ( var body in snake.body)
+                foreach (var body in snake.body)
                 {
                     body.isHead = false;
                 }
                 snake.body.First.Value.isHead = true;
+                //if(snake.body.Last.Value.GetComponent<WpfRender>() is WpfRender render)
+                //{
+                //    render.Size=new Vector2 (20, 20);
+                //}
 
                 snake.Objects = [];
-                snake.Objects.AddRange(snake.body);
+                snake.Objects.AddRange(snake.body.Reverse());
             }
         }
     }

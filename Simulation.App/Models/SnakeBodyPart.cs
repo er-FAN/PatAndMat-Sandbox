@@ -35,13 +35,14 @@ namespace Simulation.App.Models
             {
                 SpriteId = "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_blob.png",
                 Color = color,
-                Size = new Vector2(18f, 18f),
+                Size = new Vector2(25f, 25f),
                 Position = new Vector2(x, y)
             };
             Components.Add(wpfRender);
-            WpfAnimatable wpfAnimatable=new WpfAnimatable();
+            WpfAnimatable wpfAnimatable = new WpfAnimatable();
             List<string> imagePaths =
                         [
+                            "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_head.png",
                             "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_head.png",
                 "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_eyes.png"
             ];
@@ -75,7 +76,7 @@ namespace Simulation.App.Models
             if (obj is SnakeBodyPart part &&
                 part.GetComponent<WpfRender>() is WpfRender r && part.GetComponent<WpfAnimatable>() is WpfAnimatable a)
             {
-                if(part.isHead)
+                if (part.isHead)
                 {
                     r.SpriteId = a.CurrentSpriteAddres;
                 }

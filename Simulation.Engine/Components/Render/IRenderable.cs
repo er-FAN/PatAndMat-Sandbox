@@ -32,6 +32,8 @@ namespace Simulation.Engine.Components.Render
         /// رنگ شیء برای رسم در MonoGame (در صورت استفاده نکردن از sprite واقعی).
         /// </summary>
         Color Color { get; set; }
+
+        public int Layer { get; set; }
     }
 
 }

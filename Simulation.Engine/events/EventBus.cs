@@ -9,6 +9,12 @@ namespace Simulation.Engine.events
 
         public void Publish(ISimulationEvent e)
         {
+            PublishInChildContexts(e);
+            PublishInObjects(e);
+        }
+
+        private void PublishInChildContexts(ISimulationEvent e)
+        {
             foreach (IContext ctx in Context.ChildContexts)
             {
                 ctx.ContextEventBus.Publish(e);
@@ -20,19 +26,9 @@ namespace Simulation.Engine.events
                     }
                 }
             }
-            foreach (ISimulableObject obj in Context.Objects)
-            {
-                foreach (IEventListener listener in obj.Listeners)
-                {
-                    if (listener.ShouldListen(e))
-                    {
-                        listener.OnEvent(e);
-                    }
-                }
-            }
         }
 
-        public void PublishInObjects(ISimulationEvent e)
+        private void PublishInObjects(ISimulationEvent e)
         {
             foreach (ISimulableObject obj in Context.Objects)
             {
@@ -45,6 +41,7 @@ namespace Simulation.Engine.events
                 }
             }
         }
+
     }
 
 }

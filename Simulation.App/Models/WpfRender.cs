@@ -12,5 +12,6 @@ namespace Simulation.App.Models
         public System.Drawing.Color Color { get; set; }
 
         public List<ILogic> Logics { get; set; } = [];
+        public int Layer { get; set; }
     }
 }

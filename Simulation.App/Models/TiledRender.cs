@@ -14,6 +14,7 @@ namespace Simulation.App.Models
         // اندازه‌ی اسپرایت اصلی که باید تکرار شود
         public Vector2 TileSize { get; set; } = new Vector2(32, 32);
         public List<ILogic> Logics { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int Layer { get; set; } = 0;
     }
 
 }

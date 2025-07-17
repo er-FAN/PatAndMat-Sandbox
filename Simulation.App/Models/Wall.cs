@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Simulation.App.Models
 {
-    public class Wall : ISimulableObject
+    public class Wall : ISimulableObject, ITaggable
     {
         public Guid Id { get; set; }
         public List<ILogic> Logics { get; set; } = [];
@@ -21,6 +21,7 @@ namespace Simulation.App.Models
         public Vector2 Size { get; set; }
         public Vector2 Position { get; set; }
         public Direction Direction { get; set; }
+        public string? Tag { get; set; } = "wall";
 
         public Wall(Vector2 size, Vector2 position,Direction direction)
         {
@@ -37,6 +38,32 @@ namespace Simulation.App.Models
             };
 
             Components.Add(render);
+            //Components.Add(new BoundingBoxComponent());
+            AddCollisionLogic(this);
+        }
+
+        private void AddCollisionLogic(ISimulableObject part)
+        {
+            var collisionLogic = new BoundsCollisionLogic
+            {
+                TagCondition = (tagA, tagB) =>
+                {
+                    // فقط اگر یکی Snake و دیگری Wall باشد برخورد بررسی شود
+                    return (tagA == "snake" && tagB == "wall") || (tagA == "wall" && tagB == "snake");
+                },
+                OnCollision = (a, b) =>
+                {
+                    Console.WriteLine($"Collision between {GetTag(a)} and {GetTag(b)}");
+                }
+            };
+            part.Logics.Add(collisionLogic);
+        }
+
+        private string? GetTag(ISimulableObject obj)
+        {
+            if (obj is ITaggable taggable)
+                return taggable.Tag;
+            return null;
         }
 
         // Wrapper برای دسترسی آسان‌تر به کامپوننت‌ها

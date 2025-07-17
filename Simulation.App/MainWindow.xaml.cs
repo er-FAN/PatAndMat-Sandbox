@@ -17,9 +17,10 @@ namespace Simulation.App
 
     public partial class MainWindow : Window
     {
-        private readonly List<IRenderable> _objects = new();
+        //private readonly List<IRenderable> _objects = new();
         private readonly IContext mainContext;
         private readonly DispatcherTimer _timer;
+        List<IRenderable> renderables;
 
         public MainWindow()
         {
@@ -27,37 +28,65 @@ namespace Simulation.App
 
             mainContext = new SimulationContext();
 
+            InitializeGame();
+
+            CompositionTarget.Rendering += OnRenderFrame;
+        }
+
+        private void InitializeGame()
+        {
             GameGroundContext gamegroundContext = new GameGroundContext();
             mainContext.ChildContexts.Add(gamegroundContext);
+            InitializeSnake(gamegroundContext);
+            InitializeWalls(gamegroundContext);
+        }
 
-            SnakeBodyContext snake = new SnakeBodyContext(startX: 40, startY: 40, initialLength: 10, color: System.Drawing.Color.Blue);
+        private static void InitializeSnake(GameGroundContext gamegroundContext)
+        {
+            SnakeBodyContext snake = new SnakeBodyContext(startX: 300, startY: 40, initialLength: 20, color: System.Drawing.Color.Blue);
             gamegroundContext.ChildContexts.Add(snake);
+        }
 
-            Wall wall1 = new Wall(new Vector2(720, 10), new Vector2(20, 20),Direction.Up);
+        private static void InitializeWalls(GameGroundContext gamegroundContext)
+        {
+            Wall wall1 = new Wall(new Vector2(720, 10), new Vector2(20, 20), Direction.Up);
+            wall1.Components.Add(new BoundingBoxComponent
+            {
+                Position = wall1.Position,
+                Size = wall1.Size
+            });
             Wall wall2 = new Wall(new Vector2(10, 300), new Vector2(720, 20), Direction.Right);
+            wall2.Components.Add(new BoundingBoxComponent
+            {
+                Position = wall2.Position,
+                Size = wall2.Size
+            });
             Wall wall3 = new Wall(new Vector2(700, 10), new Vector2(20, 300), Direction.Down);
+            wall3.Components.Add(new BoundingBoxComponent
+            {
+                Position = wall3.Position,
+                Size = wall3.Size
+            });
             Wall wall4 = new Wall(new Vector2(10, 300), new Vector2(20, 20), Direction.Left);
+            wall4.Components.Add(new BoundingBoxComponent
+            {
+                Position = wall4.Position,
+                Size = wall4.Size
+            });
 
             gamegroundContext.Objects.Add(wall1);
             gamegroundContext.Objects.Add(wall2);
             gamegroundContext.Objects.Add(wall3);
             gamegroundContext.Objects.Add(wall4);
-
-            //_timer = new DispatcherTimer();
-            //_timer.Interval = TimeSpan.FromMilliseconds(500); // حدود 60 فریم بر ثانیه
-            //_timer.Tick += Timer_Tick;
-            //_timer.Start();
-
-            CompositionTarget.Rendering += OnRenderFrame;
         }
-        List<IRenderable> renderables;
+
         private void OnRenderFrame(object sender, EventArgs e)
         {
             mainContext.Update();
 
             new Thread(() =>
             {
-                renderables = CollectRenderables(mainContext);
+                renderables = [.. CollectRenderables(mainContext).OrderBy(r => r.Layer)];
             }).Start();
 
             RenderCanvas.Children.Clear();
@@ -125,6 +154,14 @@ namespace Simulation.App
         private void Key_Down(object sender, KeyEventArgs e)
         {
             string input = "user_input.any";
+            input = CheckUserInput(e, input);
+            UserInputEvent inputevent = new UserInputEvent();
+            inputevent.Type = input;
+            mainContext.ContextEventBus.Publish(inputevent);
+        }
+
+        private static string CheckUserInput(KeyEventArgs e, string input)
+        {
             if (e.Key == Key.A)
             {
                 input = "user_input.A";
@@ -141,9 +178,12 @@ namespace Simulation.App
             {
                 input = "user_input.W";
             }
-            UserInputEvent inputevent = new UserInputEvent();
-            inputevent.Type = input;
-            mainContext.ContextEventBus.Publish(inputevent);
+            if (e.Key == Key.Space)
+            {
+                input = "user_input.space";
+            }
+
+            return input;
         }
 
         public class UserInputEvent : ISimulationEvent

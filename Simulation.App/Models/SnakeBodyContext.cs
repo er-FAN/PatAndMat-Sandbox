@@ -1,11 +1,8 @@
-﻿using Simulation.Engine.events;
+﻿using Simulation.Engine.Components.physic;
+using Simulation.Engine.events;
 using Simulation.Engine.models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simulation.App.Models
 {
@@ -22,164 +19,167 @@ namespace Simulation.App.Models
 
         // لیست دوطرفه برای قطعات بدن، از سر (First) تا دم (Last)
         public LinkedList<SnakeBodyPart> body = new();
+        private Dictionary<SnakeBodyPart, Vector2> previousPositions = new();
         public List<ISimulationEvent> Events { get; set; } = [];
         public List<IEventListener> Listeners { get; set; } = [];
 
-        public Direction Direction { get; set; } = Direction.Right;
+
 
         public List<ISimulableObject> Objects { get; set; } = [];
         public List<ILogic> Logics { get; set; } = [];
 
         public bool growNext = false;
-
+        int lastLayer = 10000;
         public SnakeBodyContext(int startX, int startY, int initialLength, System.Drawing.Color color)
         {
+
             ContextEventBus = new(this);
-            // ایجاد مار اولیه به طول initialLength به صورت خط افقی
+
+            SnakeBodyPart? prevPart = null;
+
             for (int i = 0; i < initialLength; i++)
             {
-                var part = new SnakeBodyPart(startX - i, startY, color);
+                var part = new SnakeBodyPart(40, startY);
+                if (i == 0)
+                {
+                    
+                    InitializeHeadPart(startX, startY, part);
+                    AddCollisionLogic(part);
+                }
+                else if (prevPart != null)
+                {
+                    AddFollowTargetLogic(prevPart, part);
+                    AddRenderComponent(new Vector2(startX, startY), part);
+
+                }
+
+                prevPart = part;
+                part.Tag = "snake";
                 body.AddLast(part);
             }
-            Listeners.Add(new InputEventListener(this, null));
-            Logics.Add(new MoveSnakeLogic());
+
+            Objects.AddRange(body);
+
+        }
+
+        private void AddCollisionLogic(ISimulableObject part)
+        {
+            var collisionLogic = new BoundsCollisionLogic
+            {
+                TagCondition = (tagA, tagB) =>
+                {
+                    // فقط اگر یکی Snake و دیگری Wall باشد برخورد بررسی شود
+                    return (tagA == "snake" && tagB == "wall") || (tagA == "wall" && tagB == "snake");
+                },
+                OnCollision = (a, b) =>
+                {
+                    Console.WriteLine($"Collision between {GetTag(a)} and {GetTag(b)}");
+                }
+            };
+            part.Logics.Add(collisionLogic);
+        }
+
+        string GetTag(ISimulableObject obj)
+        {
+            if (obj is ITaggable taggable)
+            {
+                return taggable.Tag;
+            }
+            return string.Empty;
+        }
+
+        private static void AddFollowTargetLogic(SnakeBodyPart? prevPart, SnakeBodyPart part)
+        {
+            part.Logics.Add(new FollowTargetLogic(prevPart));
+        }
+
+        private void InitializeHeadPart(int startX, int startY, SnakeBodyPart part)
+        {
+            AddRenderComponent(new Vector2(startX, startY), part);
+            AddWpfAnimatableComponent(part);
+            part.isHead = true;
+            AddMoveHeadLogic(part);
+            AddInputEventListener(part);
+        }
+
+        private void AddInputEventListener(SnakeBodyPart part)
+        {
+            Listeners.Add(new InputEventListener(part) { Context = this });
+        }
+
+        private static void AddMoveHeadLogic(SnakeBodyPart part)
+        {
+            part.Logics.Add(new MoveHeadLogic());
+        }
+
+        private static void AddWpfAnimatableComponent(SnakeBodyPart part)
+        {
+            WpfAnimatable wpfAnimatable = new WpfAnimatable();
+            List<string> imagePaths =
+                        [
+                            "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_head.png",
+                                    "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_head.png",
+                                    "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_eyes.png"
+            ];
+            wpfAnimatable.Sprites.Add("walk", imagePaths);
+
+            part.Components.Add(wpfAnimatable);
+        }
+
+        private void AddRenderComponent(Vector2 position, SnakeBodyPart part)
+        {
+            var wpfRender = new WpfRender
+            {
+                SpriteId = "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_blob.png",
+                Size = new Vector2(25f, 25f),
+                Position = position,
+                Layer = lastLayer
+            };
+            part.Components.Add(wpfRender);
+            lastLayer--;
         }
 
         // اگر سر غذا بخورد، این را true کنید قبل از Update
-        public void Grow() => growNext = true;
+        public void Grow()
+        {
+            SnakeBodyPart bodyPart = new SnakeBodyPart(0, 0);
+            var wpfRender = new WpfRender
+            {
+                SpriteId = "C:\\Users\\Erfan\\source\\Simulation\\Simulation.App\\images\\snake\\snake_green_blob.png",
+                Color = System.Drawing.Color.Beige,
+                Size = new Vector2(25f, 25f),
+                Position = new Vector2(0, 0),
+                Layer = lastLayer
+            };
+            bodyPart.Components.Add(wpfRender);
+            lastLayer--;
+            bodyPart.Logics.Add(new FollowTargetLogic(body.Last()));
+            body.AddLast(bodyPart);
+        }
 
         public void Update()
         {
-            //MoveSnake();
-
-            foreach (var logic in Logics)
-            {
-                logic.Apply(null, this);
-            }
-
+            // آپدیت همه بخش‌ها
             foreach (var part in body)
                 foreach (var logic in part.Logics)
                     logic.Apply(part, this);
-        }
-    }
 
-    public class MoveSnakeLogic : ILogic
-    {
-        int step = 1;
-        public void Apply(ISimulableObject simulableObject, IContext context)
-        {
-            step++;
-            if (context is SnakeBodyContext snake && step >= 7)
-            {
-                step = 0;
 
-                var head = snake.body.First!.Value;
-                int newX = head.X, newY = head.Y;
 
-                switch (snake.Direction)
-                {
-                    case Direction.Up: newY -= 20; break;
-                    case Direction.Down: newY += 20; break;
-                    case Direction.Left: newX -= 20; break;
-                    case Direction.Right: newX += 20; break;
-                }
-
-                if (snake.growNext)
-                {
-                    // ۲-۱) اگر باید بزرگ شود: یک قطعهٔ جدید بسازیم و AddFirst کنیم
-                    var newHead = new SnakeBodyPart(
-                        newX, newY,
-                        snake.body.First!.Value.GetComponent<WpfRender>()!.Color
-                    );
-                    snake.body.AddFirst(newHead);
-                    snake.growNext = false;
-                }
-                else
-                {
-                    // ۲-۲) اگر نباید بزرگ شود: دم را برداریم و به سر بچسبانیم (حلقوی)
-                    var tailPart = snake.body.Last!.Value;
-                    snake.body.RemoveLast();
-
-                    tailPart.X = newX;
-                    tailPart.Y = newY;
-                    snake.body.AddFirst(tailPart);
-                }
-
-                foreach (var body in snake.body)
-                {
-                    body.isHead = false;
-                }
-                snake.body.First.Value.isHead = true;
-                //if(snake.body.Last.Value.GetComponent<WpfRender>() is WpfRender render)
-                //{
-                //    render.Size=new Vector2 (20, 20);
-                //}
-
-                snake.Objects = [];
-                snake.Objects.AddRange(snake.body.Reverse());
-            }
-        }
-    }
-
-    public enum Direction
-    {
-        Up,
-        Down,
-        Left,
-        Right
-    }
-
-    public class InputEventListener(IContext context, ISimulableObject simulableObject) : IEventListener
-    {
-        public IContext Context { get; set; } = context;
-        public ISimulableObject SimulableObject { get; set; } = simulableObject;
-
-        public void OnEvent(ISimulationEvent e)
-        {
-            string input = e.Type.Split('.')[1];
-            if (Context is SnakeBodyContext snakeBodyContext)
-            {
-                switch (input)
-                {
-                    case "W":
-                        if (snakeBodyContext.Direction != Direction.Down)
-                        {
-                            snakeBodyContext.Direction = Direction.Up;
-                        }
-                        break;
-                    case "S":
-                        if (snakeBodyContext.Direction != Direction.Up)
-                        {
-                            snakeBodyContext.Direction = Direction.Down;
-                        }
-                        break;
-                    case "A":
-                        if (snakeBodyContext.Direction != Direction.Right)
-                        {
-                            snakeBodyContext.Direction = Direction.Left;
-                        }
-                        break;
-                    case "D":
-                        if (snakeBodyContext.Direction != Direction.Left)
-                        {
-                            snakeBodyContext.Direction = Direction.Right;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-        }
-
-        public bool ShouldListen(ISimulationEvent e)
-        {
-            bool resualt = false;
-            if (e.Type.StartsWith("user_input"))
-            {
-                resualt = true;
-            }
-            return resualt;
+            // تنظیم وضعیت اشیای کانتکست
+            Objects = [];
+            Objects.AddRange(body);
         }
     }
 }
+
+
+
+public enum Direction
+{
+    Up,
+    Down,
+    Left,
+    Right
+}
+
